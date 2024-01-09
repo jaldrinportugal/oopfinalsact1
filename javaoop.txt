@@ -1,0 +1,172 @@
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Scanner;
+
+class User {
+    private String username;
+    private double balance;
+
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public double getBalance() {
+        return balance;
+    }
+
+    public void setBalance(double balance) {
+        this.balance = balance;
+    }
+}
+
+class AuctionItem {
+    private String name;
+    private double currentBid;
+    private String currentBidder;
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public double getCurrentBid() {
+        return currentBid;
+    }
+
+    public void setCurrentBid(double currentBid) {
+        this.currentBid = currentBid;
+    }
+
+    public String getCurrentBidder() {
+        return currentBidder;
+    }
+
+    public void setCurrentBidder(String currentBidder) {
+        this.currentBidder = currentBidder;
+    }
+}
+
+class AuctionSystem {
+    private List<AuctionItem> items;
+    private List<User> users;
+
+    public AuctionSystem() {
+        items = new ArrayList<>();
+        users = new ArrayList<>();
+    }
+
+    public void addItem(String itemName, double startingPrice) {
+        AuctionItem newItem = new AuctionItem();
+        newItem.setName(itemName);
+        newItem.setCurrentBid(startingPrice);
+        newItem.setCurrentBidder("No bidder yet");
+        items.add(newItem);
+    }
+
+    public void addUser(String username, double initialBalance) {
+        User newUser = new User();
+        newUser.setUsername(username);
+        newUser.setBalance(initialBalance);
+        users.add(newUser);
+    }
+
+    public void showItems() {
+        System.out.println("Available Items for Auction:");
+        for (AuctionItem item : items) {
+            System.out.println("Item: " + item.getName() + ", Current Bid: " + item.getCurrentBid() +
+                    ", Current Bidder: " + item.getCurrentBidder());
+        }
+    }
+
+    public void showUsers() {
+        System.out.println("Registered Users:");
+        for (User user : users) {
+            System.out.println("Username: " + user.getUsername() + ", Balance: " + user.getBalance());
+        }
+    }
+
+    public void bid(String itemName, double bidAmount, String bidderName) {
+        AuctionItem item = items.stream().filter(i -> i.getName().equals(itemName)).findFirst().orElse(null);
+        User bidder = users.stream().filter(u -> u.getUsername().equals(bidderName)).findFirst().orElse(null);
+
+        if (item != null && bidder != null) {
+            if (bidAmount > item.getCurrentBid() && bidAmount <= bidder.getBalance()) {
+                item.setCurrentBid(bidAmount);
+                item.setCurrentBidder(bidderName);
+                bidder.setBalance(bidder.getBalance() - bidAmount);
+                System.out.println("Bid accepted for " + item.getName() + " by " + bidderName + " at " + bidAmount);
+            } else if (bidAmount <= item.getCurrentBid()) {
+                System.out.println("Bid amount should be higher than the current bid.");
+            } else {
+                System.out.println("Insufficient balance or user not found.");
+            }
+        } else {
+            System.out.println("Item or user not found.");
+        }
+    }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        AuctionSystem auctionSystem = new AuctionSystem();
+        auctionSystem.addItem("Painting", 100);
+        auctionSystem.addItem("Antique Vase", 150);
+        auctionSystem.addUser("john", 500);
+        auctionSystem.addUser("doe", 750);
+
+        Scanner scanner = new Scanner(System.in);
+        boolean running = true;
+        while (running) {
+            System.out.println("\nOptions:");
+            System.out.println("1. Show Available Items");
+            System.out.println("2. Show Registered Users");
+            System.out.println("3. Bid on an Item");
+            System.out.println("4. Exit");
+            System.out.print("Enter option number: ");
+
+            int option;
+            if (scanner.hasNextInt()) {
+                option = scanner.nextInt();
+                switch (option) {
+                    case 1:
+                        auctionSystem.showItems();
+                        break;
+                    case 2:
+                        auctionSystem.showUsers();
+                        break;
+                    case 3:
+                        System.out.print("Enter item name: ");
+                        String itemName = scanner.next();
+                        System.out.print("Enter your username: ");
+                        String bidderName = scanner.next();
+                        System.out.print("Enter bid amount: ");
+                        double bidAmount;
+                        if (scanner.hasNextDouble()) {
+                            bidAmount = scanner.nextDouble();
+                            auctionSystem.bid(itemName, bidAmount, bidderName);
+                        } else {
+                            System.out.println("Invalid bid amount.");
+                        }
+                        break;
+                    case 4:
+                        running = false;
+                        break;
+                    default:
+                        System.out.println("Invalid option.");
+                        break;
+                }
+            } else {
+                System.out.println("Please enter a valid option number.");
+                scanner.next(); // clear invalid input
+            }
+        }
+        scanner.close();
+    }
+}
